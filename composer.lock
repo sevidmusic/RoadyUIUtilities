@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3f6ee738d05442d2460f0c58b4222e39",
+    "content-hash": "f8acdf728fc2d7e28036edd43369d329",
     "packages": [
         {
             "name": "darling/php-darling-dev-tools",
@@ -433,6 +433,58 @@
                 "source": "https://github.com/sevidmusic/RoadyRoutes/tree/v1.0.2"
             },
             "time": "2023-12-14T21:48:35+00:00"
+        },
+        {
+            "name": "darling/roady-routing-utilities",
+            "version": "v1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sevidmusic/RoadyRoutingUtilities.git",
+                "reference": "2d225ac57ec70bff2bcd94a0d4726e5048802b19"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sevidmusic/RoadyRoutingUtilities/zipball/2d225ac57ec70bff2bcd94a0d4726e5048802b19",
+                "reference": "2d225ac57ec70bff2bcd94a0d4726e5048802b19",
+                "shasum": ""
+            },
+            "require": {
+                "darling/php-darling-dev-tools": "^1.0",
+                "darling/php-file-system-paths": "^1.0",
+                "darling/php-text-types": "^1.1",
+                "darling/php-unit-test-utilities": "^1.0",
+                "darling/php-web-paths": "^1.0",
+                "darling/roady-module-utilities": "^1.0",
+                "darling/roady-routes": "^1.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "*",
+                "phpunit/phpunit": "*"
+            },
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "Darling\\RoadyRoutingUtilities\\": "src/",
+                    "Darling\\RoadyRoutingUtilities\\tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sevi Donnelly Foreman",
+                    "email": "sdmwebsdm@gmail.com"
+                }
+            ],
+            "description": "Routing utilities for the Roady php framework.",
+            "support": {
+                "issues": "https://github.com/sevidmusic/RoadyRoutingUtilities/issues",
+                "source": "https://github.com/sevidmusic/RoadyRoutingUtilities/tree/v1.0.6"
+            },
+            "time": "2024-02-25T22:55:55+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
