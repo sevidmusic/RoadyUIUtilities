@@ -25,7 +25,11 @@ class UserInterfaceTest extends RoadyUIUtilitiesTest
     public function setUp(): void
     {
         $this->setUserInterfaceTestInstance(
-            new UserInterface()
+            new UserInterface(
+                $this->pathToDirectoryOfRoadyTestModules(),
+                $this->routeCollectionSorter(),
+                $this->roadyModuleFileSystemPathDeterminator(),
+            )
         );
     }
 }
