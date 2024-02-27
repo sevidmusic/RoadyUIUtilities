@@ -1,6 +1,6 @@
 <?php
 
-namespace Darling\RoadyRoutingUtilities\tests;
+namespace Darling\RoadyUIUtilities\tests;
 
 use \Darling\RoadyModuleUtilities\interfaces\paths\PathToDirectoryOfRoadyModules;
 use \Darling\PHPTextTypes\classes\strings\Text as TextInstance;
@@ -16,13 +16,13 @@ use \PHPUnit\Framework\TestCase;
 
 /**
  * Defines common methods that may be useful to all
- * RoadyRoutingUtilities test classes.
+ * RoadyUIUtilities test classes.
  *
- * All RoadyRoutingUtilities test classes must extend from this class.
+ * All RoadyUIUtilities test classes must extend from this class.
  *
  */
 #[CoversNothing]
-class RoadyRoutingUtilitiesTest extends TestCase
+class RoadyUIUtilitiesTest extends TestCase
 {
     use PHPUnitConfigurationTests;
     use PHPUnitTestMessages;
