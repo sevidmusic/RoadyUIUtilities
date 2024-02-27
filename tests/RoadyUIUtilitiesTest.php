@@ -2,6 +2,17 @@
 
 namespace Darling\RoadyUIUtilities\tests;
 
+use Darling\RoadyModuleUtilities\classes\configuration\ModuleRoutesJsonConfigurationReader;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleCSSRouteDeterminator;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleJSRouteDeterminator;
+use Darling\RoadyModuleUtilities\classes\determinators\RoadyModuleFileSystemPathDeterminator;
+use Darling\RoadyModuleUtilities\classes\directory\listings\ListingOfDirectoryOfRoadyModules;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleOutputRouteDeterminator;
+use Darling\RoadyRoutingUtilities\classes\requests\Request;
+use \Darling\RoadyRoutingUtilities\classes\routers\Router as RouterInstance;
+use \Darling\RoadyRoutingUtilities\classes\routers\Router;
+use \Darling\RoadyRoutingUtilities\interfaces\responses\Response;
+use \Darling\RoadyRoutingUtilities\classes\responses\ResponseInstance;
 use \Darling\RoadyModuleUtilities\interfaces\paths\PathToDirectoryOfRoadyModules;
 use \Darling\PHPTextTypes\classes\strings\Text as TextInstance;
 use \Darling\PHPTextTypes\classes\strings\SafeText as SafeTextInstance;
@@ -97,6 +108,20 @@ class RoadyUIUtilitiesTest extends TestCase
             new PathToExistingDirectoryInstance(
                 new SafeTextCollectionInstance(...$arrayOfSafeText))
         );
+    }
+
+    public function randomResponse(): Response
+    {
+        $router = new Router(
+            new ListingOfDirectoryOfRoadyModules($this->pathToDirectoryOfRoadyTestModules()),
+            new ModuleCSSRouteDeterminator(),
+            new ModuleJSRouteDeterminator(),
+            new ModuleOutputRouteDeterminator(),
+            new RoadyModuleFileSystemPathDeterminator(),
+            new ModuleRoutesJsonConfigurationReader(),
+        );
+        $request = new Request($this->randomUrlString());
+        return $router->handleRequest($request);
     }
 
 }
