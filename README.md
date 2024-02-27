@@ -42,7 +42,7 @@ $router = new RouterInstance(
 
 $response = $router->handleRequest($currentRequest);
 
-$roadyUI = new RoadyUI(
+$roadyUI = new UserInterface(
     RoadyAPI::pathToDirectoryOfRoadyModules(),
     new RouteCollectionSorterInstance(),
     $roadyModuleFileSystemPathDeterminator,
