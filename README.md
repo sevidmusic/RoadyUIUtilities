@@ -24,8 +24,6 @@ The following is a snippet from the [Roady](https://github.com/sevidmusic/roady)
 `index.php` file showing how a UserInterface is used in
 practice.
 
-```
-
 ```php
 $currentRequest = new RequestInstance();
 $roadyModuleFileSystemPathDeterminator =
