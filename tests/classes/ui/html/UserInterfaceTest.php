@@ -12,8 +12,8 @@ class UserInterfaceTest extends RoadyUIUtilitiesTest
 {
 
     /**
-     * The UserInterfaceTestTrait defines
-     * common tests for implementations of the
+     * The UserInterfaceTestTrait defines common tests for
+     * implementations of the
      * Darling\RoadyUIUtilities\interfaces\ui\html\UserInterface
      * interface.
      *

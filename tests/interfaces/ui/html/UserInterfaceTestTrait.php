@@ -336,7 +336,10 @@ EOT;
         return $output;
     }
 
-    private function determineOutput(PathToExistingFile $pathToFile, string $namedPosition, string $position): string
+    private function determineOutput(
+        PathToExistingFile $pathToFile,
+        string $namedPosition, string $position
+    ): string
     {
         $renderedOutputKey = sha1($pathToFile->__toString());
         if(!isset($this->renderedOutput[$renderedOutputKey])) {
@@ -348,10 +351,7 @@ EOT;
                     ["\r\n", "\r", "\n", PHP_EOL],
                     '',
                     trim(
-                        match(str_contains($pathToFile->name()->__toString(), '.php')) {
-                            true => $this->includePHPFile($pathToFile),
-                            default => strval(file_get_contents( $pathToFile->__toString())),
-                        }
+                       $this->loadContent($pathToFile)
                     )
                 ),
                 default => PHP_EOL .
@@ -359,15 +359,45 @@ EOT;
                     $namedPosition . ' position ' . $position  .
                     ' -->' .
                     PHP_EOL .
-                    match(str_contains($pathToFile->name()->__toString(), '.php')) {
-                        true => $this->includePHPFile($pathToFile),
-                        default => strval(file_get_contents( $pathToFile->__toString())),
-                    } .
+                    $this->loadContent($pathToFile) .
                     PHP_EOL .
-                    '<!-- end ' . $namedPosition . ' position ' . $position  . ' -->' . PHP_EOL
+                    '<!-- end ' .
+                    $namedPosition . ' position ' . $position  .
+                    ' -->' . PHP_EOL
                 };
         }
         return $this->renderedOutput[$renderedOutputKey];
+    }
+
+
+    /**
+     * If the specified $pathToFile is a path to a php file, then
+     * include the file within an output buffer and return the
+     * captured output as a string.
+     *
+     * If the specified $pathToFile is not a php file then return
+     * it's contents as a string.
+     *
+     * @param PathToExistingFile $pathToFile The path to the file
+     *                                       to load.
+     *
+     * @return string
+     *
+     */
+    private function loadContent(PathToExistingFile $pathToFile): string
+    {
+        return match(
+            str_contains(
+                $pathToFile->name()->__toString(), '.php'
+            )
+        ) {
+            true => $this->includePHPFile($pathToFile),
+            default => strval(
+                file_get_contents(
+                    $pathToFile->__toString()
+                )
+            ),
+        };
     }
 
     public function expectedOutput(Response $response): string
@@ -427,7 +457,11 @@ EOT;
                         DIRECTORY_SEPARATOR .
                         $route->relativePath()->__toString()  .
                         '"></script>',
-                    default => $this->determineOutput($pathToFile, $namedPosition, $position),
+                    default => $this->determineOutput(
+                        $pathToFile,
+                        $namedPosition,
+                        $position
+                    ),
                 };
             }
         }
@@ -483,7 +517,15 @@ EOT;
     {
         return str_replace(
             '<' . $this->roady_ui_page_title_placeholder  . '></' . $this->roady_ui_page_title_placeholder . '>',
-            $response->request()->url()->domain()->__toString() . ' | ' . ucwords(str_replace('-', ' ', $response->request()->name()->__toString())),
+            $response->request()->url()->domain()->__toString() .
+            ' | ' .
+            ucwords(
+                str_replace(
+                    '-',
+                    ' ',
+                    $response->request()->name()->__toString()
+                )
+            ),
             $string,
         );
     }
@@ -552,10 +594,10 @@ EOT;
         );
     }
 
-    abstract public function randomResponse(): Response;
-    abstract public function pathToDirectoryOfRoadyTestModules(): PathToDirectoryOfRoadyModules;
-    abstract public static function assertEquals(mixed $expected, mixed $actual, string $message = ''): void;
     abstract protected function testFailedMessage(object $testedInstance, string $testedMethod, string $expectation): string;
+    abstract public function pathToDirectoryOfRoadyTestModules(): PathToDirectoryOfRoadyModules;
+    abstract public function randomResponse(): Response;
+    abstract public static function assertEquals(mixed $expected, mixed $actual, string $message = ''): void;
 
 }
 

@@ -13,6 +13,25 @@ use \Darling\RoadyUIUtilities\interfaces\ui\html\UserInterface as UserInterfaceI
 class UserInterface implements UserInterfaceInterface
 {
 
+    /**
+     * Instantiate a new UserInterface.
+     *
+     * @param PathToDirectoryOfRoadyModules $pathToDirectoryOfRoadyModules
+     *                                      The path to a directory of
+     *                                      Roady modules.
+     *
+     * @param RouteCollectionSorter $routeCollectionSorter
+     *                              A RouteCollectionSorter instance
+     *                              that will be used to sort the
+     *                              Routes defined by the Responses
+     *                              rendered by this UserInterface.
+     *
+     * @param RoadyModuleFileSystemPathDeterminator $roadyModuleFileSystemPathDeterminator
+     *                     A RoadyModuleFileSystemPathDeterminator
+     *                     instance that will be used to determine
+     *                     the paths to module files and directories.
+     *
+     */
     public function __construct(
         private PathToDirectoryOfRoadyModules $pathToDirectoryOfRoadyModules,
         private RouteCollectionSorter $routeCollectionSorter,
@@ -223,27 +242,51 @@ EOT;
                 self::ROADY_UI_META_KEYWORDS => str_replace(
                     ["\r\n", "\r", "\n", PHP_EOL],
                     '',
-                    trim(
-                        match(str_contains($pathToFile->name()->__toString(), '.php')) {
-                            true => $this->includePHPFile($pathToFile),
-                            default => strval(file_get_contents( $pathToFile->__toString())),
-                        }
-                    )
+                    trim($this->loadContent($pathToFile))
                 ),
                 default => PHP_EOL .
                     '<!-- begin ' .
                     $namedPosition . ' position ' . $position  .
                     ' -->' .
                     PHP_EOL .
-                    match(str_contains($pathToFile->name()->__toString(), '.php')) {
-                        true => $this->includePHPFile($pathToFile),
-                        default => strval(file_get_contents( $pathToFile->__toString())),
-                    } .
+                    $this->loadContent($pathToFile) .
                     PHP_EOL .
-                    '<!-- end ' . $namedPosition . ' position ' . $position  . ' -->' . PHP_EOL
+                    '<!-- end ' .
+                    $namedPosition . ' position ' . $position  .
+                    ' -->' . PHP_EOL
                 };
         }
         return $this->renderedOutput[$renderedOutputKey];
+    }
+
+    /**
+     * If the specified $pathToFile is a path to a php file, then
+     * include the file within an output buffer and return the
+     * captured output as a string.
+     *
+     * If the specified $pathToFile is not a php file then return
+     * it's contents as a string.
+     *
+     * @param PathToExistingFile $pathToFile The path to the file
+     *                                       to load.
+     *
+     * @return string
+     *
+     */
+    private function loadContent(PathToExistingFile $pathToFile): string
+    {
+        return match(
+            str_contains(
+                $pathToFile->name()->__toString(), '.php'
+            )
+        ) {
+            true => $this->includePHPFile($pathToFile),
+            default => strval(
+                file_get_contents(
+                    $pathToFile->__toString()
+                )
+            ),
+        };
     }
 
     private function includePHPFile(PathToExistingFile $pathToFile): string
