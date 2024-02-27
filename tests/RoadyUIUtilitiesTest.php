@@ -2,6 +2,17 @@
 
 namespace Darling\RoadyUIUtilities\tests;
 
+use Darling\RoadyModuleUtilities\classes\configuration\ModuleRoutesJsonConfigurationReader;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleCSSRouteDeterminator;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleJSRouteDeterminator;
+use Darling\RoadyModuleUtilities\classes\determinators\RoadyModuleFileSystemPathDeterminator;
+use Darling\RoadyModuleUtilities\classes\directory\listings\ListingOfDirectoryOfRoadyModules;
+use Darling\RoadyModuleUtilities\classes\determinators\ModuleOutputRouteDeterminator;
+use Darling\RoadyRoutingUtilities\classes\requests\Request;
+use \Darling\RoadyRoutingUtilities\classes\routers\Router as RouterInstance;
+use \Darling\RoadyRoutingUtilities\classes\routers\Router;
+use \Darling\RoadyRoutingUtilities\interfaces\responses\Response;
+use \Darling\RoadyRoutingUtilities\classes\responses\ResponseInstance;
 use \Darling\RoadyModuleUtilities\interfaces\paths\PathToDirectoryOfRoadyModules;
 use \Darling\PHPTextTypes\classes\strings\Text as TextInstance;
 use \Darling\PHPTextTypes\classes\strings\SafeText as SafeTextInstance;
@@ -38,40 +49,18 @@ class RoadyUIUtilitiesTest extends TestCase
     public function randomUrlString(): string|null
     {
        $urlStrings = [
-            $this->randomChars(),
-            '',
-            'http://',
-            'http://foo.bar.baz:2343/',
-            'http://foo.bar.baz:2343/some/path/bin.html',
-            'http://foo.bar.baz:2343/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'http://foo.bar.baz:2343/some/path/bin.html?request=specific-request&q=a&b=c',
-            'http://foo.bar:43/',
-            'http://foo.bar:43/some/path/bin.html',
-            'http://foo.bar:43/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'http://foo.bar:43/some/path/bin.html?request=specific-request&q=a&b=c',
-            'http://foo:17/',
-            'http://foo:17/some/path/bin.html',
-            'http://foo:17/some/path/bin.html?request=specific-request&q=a&b=Kathooks%20Music',
-            'http://foo:17/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'http://foo:17/some/path/bin.html?request=specific-request&q=a&b=c',
-            'http://localhost',
-            'http://localhost:80',
-            'http://localhost:8080',
-            'http://localhost:8888',
-            'https://',
-            'https://foo.bar.baz:2343/',
-            'https://foo.bar.baz:2343/some/path/bin.html',
-            'https://foo.bar.baz:2343/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'https://foo.bar.baz:2343/some/path/bin.html?request=specific-request&q=a&b=c',
-            'https://foo.bar:43/',
-            'https://foo.bar:43/some/path/bin.html',
-            'https://foo.bar:43/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'https://foo.bar:43/some/path/bin.html?request=specific-request&q=a&b=c',
-            'https://foo:17/',
-            'https://foo:17/some/path/bin.html',
-            'https://foo:17/some/path/bin.html?request=specific-request&q=a&b=c#frag',
-            'https://foo:17/some/path/bin.html?request=specific-request&q=a&b=c',
             null,
+            '',
+            'http://localhost:8080',
+            'http://localhost:8080?request=hello-world',
+            'http://localhost:8080?request=hello-universe',
+            'http://localhost:8080?request=hello-multiverse',
+            'http://localhost:8080?request=homepage',
+            'http://localhost:8888',
+            'http://localhost:8888?request=hello-world',
+            'http://localhost:8888?request=hello-universe',
+            'http://localhost:8888?request=hello-multiverse',
+            'http://localhost:8888?request=homepage',
         ];
         return $urlStrings[array_rand($urlStrings)];
     }
@@ -97,6 +86,20 @@ class RoadyUIUtilitiesTest extends TestCase
             new PathToExistingDirectoryInstance(
                 new SafeTextCollectionInstance(...$arrayOfSafeText))
         );
+    }
+
+    public function randomResponse(): Response
+    {
+        $router = new Router(
+            new ListingOfDirectoryOfRoadyModules($this->pathToDirectoryOfRoadyTestModules()),
+            new ModuleCSSRouteDeterminator(),
+            new ModuleJSRouteDeterminator(),
+            new ModuleOutputRouteDeterminator(),
+            new RoadyModuleFileSystemPathDeterminator(),
+            new ModuleRoutesJsonConfigurationReader(),
+        );
+        $request = new Request($this->randomUrlString());
+        return $router->handleRequest($request);
     }
 
 }
