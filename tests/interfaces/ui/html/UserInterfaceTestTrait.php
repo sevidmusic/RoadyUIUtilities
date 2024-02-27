@@ -2,6 +2,15 @@
 
 namespace Darling\RoadyUIUtilities\tests\interfaces\ui\html;
 
+use Darling\RoadyModuleUtilities\interfaces\determinators\RoadyModuleFileSystemPathDeterminator;
+use Darling\RoadyModuleUtilities\classes\determinators\RoadyModuleFileSystemPathDeterminator as RoadyModuleFileSystemPathDeterminatorInstance;
+use Darling\RoadyModuleUtilities\interfaces\paths\PathToDirectoryOfRoadyModules;
+use Darling\RoadyRoutes\interfaces\sorters\RouteCollectionSorter;
+use Darling\RoadyRoutes\classes\sorters\RouteCollectionSorter as RouteCollectionSorterInstance;
+use \Darling\PHPFileSystemPaths\interfaces\paths\PathToExistingFile;
+use \Darling\RoadyModuleUtilities\classes\paths\PathToRoadyModuleDirectory as PathToRoadyModuleDirectoryInstance;
+use \Darling\RoadyModuleUtilities\interfaces\paths\PathToRoadyModuleDirectory;
+use \Darling\RoadyRoutingUtilities\interfaces\responses\Response;
 use \Darling\RoadyUIUtilities\interfaces\ui\html\UserInterface;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
@@ -136,6 +145,28 @@ trait UserInterfaceTestTrait
      */
     private string $roady_ui_pre_header = 'roady-ui-pre-header';
 
+    /**
+     * Return a RouteCollectionSorter instance to use for testing.
+     *
+     * @return RouteCollectionSorter
+     *
+     */
+    private function routeCollectionSorter(): RouteCollectionSorter
+    {
+        return new RouteCollectionSorterInstance();
+    }
+
+    /**
+     * Return a RoadyModuleFileSystemPathDeterminator instance to use
+     * for testing.
+     *
+     * @return RoadyModuleFileSystemPathDeterminator
+     *
+     */
+    private function roadyModuleFileSystemPathDeterminator(): RoadyModuleFileSystemPathDeterminator
+    {
+        return new RoadyModuleFileSystemPathDeterminatorInstance();
+    }
 
     /**
      * Return an array of the names of the NamedPositions that
@@ -222,6 +253,7 @@ trait UserInterfaceTestTrait
 <roady-ui-js-script-tags-for-end-of-html></roady-ui-js-script-tags-for-end-of-html>
 
 <!-- Powered by Roady (https://github.com/sevidmusic/roady) -->
+<!-- Current Request: ROADY-UI-CURRENT-REQUEST -->
 
 EOT;
 
@@ -289,10 +321,225 @@ EOT;
         $this->userInterface = $userInterfaceTestInstance;
     }
 
-    protected function expectedOutput(): string
+    private function includePHPFile(PathToExistingFile $pathToFile): string
     {
-        return '';
+        $output = '<div class="roady-ui-error">' .
+            '<h2>Error</h2><p>Failed to load content for: ' . '</p>' .
+            $pathToFile->__toString() .
+            '</div>';
+        ob_start();
+        require_once($pathToFile->__toString());
+        $renderedOutput = ob_get_contents();
+        if(is_string($renderedOutput)) {
+            $output = $renderedOutput;
+        }
+        ob_end_clean();
+        return $output;
     }
+
+    private function determineOutput(PathToExistingFile $pathToFile, string $namedPosition, string $position): string
+    {
+        $renderedOutputKey = sha1($pathToFile->__toString());
+        if(!isset($this->renderedOutput[$renderedOutputKey])) {
+            $this->renderedOutput[$renderedOutputKey] =
+                match($namedPosition) {
+                $this->roady_ui_meta_author,
+                $this->roady_ui_meta_description,
+                $this->roady_ui_meta_keywords => str_replace(
+                    ["\r\n", "\r", "\n", PHP_EOL],
+                    '',
+                    trim(
+                        match(str_contains($pathToFile->name()->__toString(), '.php')) {
+                            true => $this->includePHPFile($pathToFile),
+                            default => strval(file_get_contents( $pathToFile->__toString())),
+                        }
+                    )
+                ),
+                default => PHP_EOL .
+                    '<!-- begin ' .
+                    $namedPosition . ' position ' . $position  .
+                    ' -->' .
+                    PHP_EOL .
+                    match(str_contains($pathToFile->name()->__toString(), '.php')) {
+                        true => $this->includePHPFile($pathToFile),
+                        default => strval(file_get_contents( $pathToFile->__toString())),
+                    } .
+                    PHP_EOL .
+                    '<!-- end ' . $namedPosition . ' position ' . $position  . ' -->' . PHP_EOL
+                };
+        }
+        return $this->renderedOutput[$renderedOutputKey];
+    }
+
+    public function expectedOutput(Response $response): string
+    {
+        $uiLayoutString = $this->roady_ui_layout_string;
+        $sortedRoutes = $this->routeCollectionSorter()
+                             ->sortByNamedPosition(
+                                 $response->routeCollection()
+                             );
+        $renderedOutput = [];
+        foreach($sortedRoutes as $namedPosition => $routes) {
+            foreach($routes as $position => $route) {
+                $pathToRoadyModuleDirectory =
+                    new PathToRoadyModuleDirectoryInstance(
+                        $this->pathToDirectoryOfRoadyTestModules(),
+                        $route->moduleName()
+                    );
+                $pathToFile = $this->roadyModuleFileSystemPathDeterminator()
+                                   ->determinePathToFileInModuleDirectory(
+                                       $pathToRoadyModuleDirectory,
+                                       $route->relativePath()
+                                   );
+                $fileExtension = pathinfo(
+                    $pathToFile,
+                    PATHINFO_EXTENSION
+                );
+                $webPathToFile = $response->request()
+                                          ->url()
+                                          ->domain()
+                                          ->__toString() .
+                                          DIRECTORY_SEPARATOR .
+                                          basename(
+                                              $this->pathToDirectoryOfRoadyTestModules()
+                                              ->__toString()
+                                          ) .
+                                          DIRECTORY_SEPARATOR .
+                                          $pathToRoadyModuleDirectory->name()
+                                                                     ->__toString();
+                $renderedOutput[$namedPosition][] = match($fileExtension) {
+                    'css' =>
+                    '        <!-- ' .
+                        $namedPosition . ' position ' . $position  .
+                    ' -->' .
+                    PHP_EOL .
+                    '        <link rel="stylesheet" href="'.
+                        $webPathToFile .
+                        DIRECTORY_SEPARATOR .
+                        $route->relativePath()->__toString()  .
+                        '">',
+                    'js' =>
+                    '        <!-- ' .
+                        $namedPosition . ' position ' . $position  .
+                    ' -->' .
+                    PHP_EOL .
+                    '        <script src="'.
+                        $webPathToFile .
+                        DIRECTORY_SEPARATOR .
+                        $route->relativePath()->__toString()  .
+                        '"></script>',
+                    default => $this->determineOutput($pathToFile, $namedPosition, $position),
+                };
+            }
+        }
+        foreach(
+            $this->availableNamedPositions() as $availableNamedPosition
+        ) {
+            if(
+                $availableNamedPosition !== $this->roady_ui_page_title_placeholder
+                &&
+                isset($renderedOutput[$availableNamedPosition])
+            ) {
+                $uiLayoutString = match(
+                    $availableNamedPosition === $this->roady_ui_css_stylesheet_link_tags
+                    ||
+                    $availableNamedPosition === $this->roady_ui_js_script_tags_for_html_head
+                    ||
+                    $availableNamedPosition === $this->roady_ui_js_script_tags_for_end_of_html
+                ) {
+                    true => str_replace(
+                        '<' . $availableNamedPosition . '></' . $availableNamedPosition . '>',
+                        implode(PHP_EOL, $renderedOutput[$availableNamedPosition]),
+                        $uiLayoutString
+                    ),
+                    default => str_replace(
+                        '<' . $availableNamedPosition . '></' . $availableNamedPosition . '>',
+                        implode(
+                            PHP_EOL,
+                            $renderedOutput[$availableNamedPosition]
+                        ),
+                        $uiLayoutString
+                    ),
+                };
+            }
+            $uiLayoutString = $this->renderTitle($response, $uiLayoutString);
+            $uiLayoutString = $this->removeEmptyPosition($availableNamedPosition, $uiLayoutString);
+        }
+        $uiLayoutString = $this->renderCurrentRequest($response, $uiLayoutString);
+        var_dump($uiLayoutString);
+        return $uiLayoutString;
+    }
+
+    /**
+     * Return a string that has a title rendered for the specified
+     * Response in the specified string.
+     *
+     * @param Response $response The Response to render a title for.
+     *
+     * @param string $string The string to render the title in.
+     *
+     * @return string
+     *
+     */
+    private function renderTitle(Response $response, string $string): string
+    {
+        return str_replace(
+            '<' . $this->roady_ui_page_title_placeholder  . '></' . $this->roady_ui_page_title_placeholder . '>',
+            $response->request()->url()->domain()->__toString() . ' | ' . ucwords(str_replace('-', ' ', $response->request()->name()->__toString())),
+            $string,
+        );
+    }
+
+    /**
+     * Return a string that has specified empty position stripped
+     * from the specified string.
+     *
+     * @param string $emptyPositionName The name of the empty position.
+     *
+     * @param string $string The string to string the empty
+     *                       position from.
+     *
+     * @return string
+     *
+     */
+    private function removeEmptyPosition(string $emptyPositionName, string $string): string
+    {
+        return str_replace(
+            '<' . $emptyPositionName . '></' . $emptyPositionName . '>',
+            '',
+            $string,
+        );
+
+    }
+
+    /**
+     * Return a string that has a current Request's url string
+     * rendered for the specified Response in the specified string.
+     *
+     * @param Response $response The relevant Response.
+     *
+     * @param string $string The string to render the current
+     *                       Request's url string in.
+     *
+     * @return string
+     *
+     */
+    private function renderCurrentRequest(Response $response, string $string): string
+    {
+        return str_replace(
+            'ROADY-UI-CURRENT-REQUEST',
+            $response->request()->url()->__toString(),
+            $string,
+        );
+    }
+
+    public function test_foo(): void
+    {
+        $this->expectedOutput($this->randomResponse());
+    }
+
+    abstract public function randomResponse(): Response;
+    abstract public function pathToDirectoryOfRoadyTestModules(): PathToDirectoryOfRoadyModules;
 
 }
 
