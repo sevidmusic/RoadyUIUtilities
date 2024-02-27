@@ -462,10 +462,9 @@ EOT;
                 };
             }
             $uiLayoutString = $this->renderTitle($response, $uiLayoutString);
-            $uiLayoutString = $this->removeEmptyPosition($availableNamedPosition, $uiLayoutString);
+            $uiLayoutString = $this->removePositionIfUnused($availableNamedPosition, $uiLayoutString);
         }
         $uiLayoutString = $this->renderCurrentRequest($response, $uiLayoutString);
-        var_dump($uiLayoutString);
         return $uiLayoutString;
     }
 
@@ -490,21 +489,21 @@ EOT;
     }
 
     /**
-     * Return a string that has specified empty position stripped
-     * from the specified string.
+     * Return a string that has specified named position stripped
+     * from the specified string if it is unused.
      *
-     * @param string $emptyPositionName The name of the empty position.
+     * @param string $positionName The name of the position.
      *
-     * @param string $string The string to string the empty
+     * @param string $string The string to remove the unused named
      *                       position from.
      *
      * @return string
      *
      */
-    private function removeEmptyPosition(string $emptyPositionName, string $string): string
+    private function removePositionIfUnused(string $positionName, string $string): string
     {
         return str_replace(
-            '<' . $emptyPositionName . '></' . $emptyPositionName . '>',
+            '<' . $positionName. '></' . $positionName. '>',
             '',
             $string,
         );
@@ -532,13 +531,31 @@ EOT;
         );
     }
 
-    public function test_foo(): void
+    /**
+     * Test that the render() method returns the expected output
+     * for the specified Response.
+     *
+     * @return void
+     *
+     */
+    public function test_render_returns_the_expected_output(): void
     {
-        $this->expectedOutput($this->randomResponse());
+        $response = $this->randomResponse();
+        $this->assertEquals(
+            $this->expectedOutput($response),
+            $this->userInterfaceTestInstance()->render($response),
+            $this->testFailedMessage(
+                $this->userInterfaceTestInstance(),
+                'render',
+                'returns the expected output',
+            )
+        );
     }
 
     abstract public function randomResponse(): Response;
     abstract public function pathToDirectoryOfRoadyTestModules(): PathToDirectoryOfRoadyModules;
+    abstract public static function assertEquals(mixed $expected, mixed $actual, string $message = ''): void;
+    abstract protected function testFailedMessage(object $testedInstance, string $testedMethod, string $expectation): string;
 
 }
 
