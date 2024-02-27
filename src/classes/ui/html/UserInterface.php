@@ -289,6 +289,16 @@ EOT;
         };
     }
 
+    /**
+     * Include the php file at the specified path using an output
+     * buffer to capture it's output which will be returned as a
+     * string.
+     *
+     * @param PathToExistingFile $pathToFile
+     *
+     * @return string
+     *
+     */
     private function includePHPFile(PathToExistingFile $pathToFile): string
     {
         $output = '<div class="roady-ui-error"><h2>Error</h2><p>Failed to load content for: ' . $pathToFile->__toString() . '</p></div>';
