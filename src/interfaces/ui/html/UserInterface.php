@@ -6,6 +6,12 @@ use \Darling\RoadyRoutingUtilities\interfaces\responses\Response;
 
 /**
  * A UserInterface can render output for a Response.
+ *
+ * The UserInterface's defined under the
+ * Darling\RoadyUIUtilities\interfaces\ui\html namespace
+ * are intended to produce html for a web page based
+ * on the Routes defined by a given Response.
+ *
  */
 interface UserInterface
 {
